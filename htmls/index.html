@@ -15,19 +15,18 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const context = canvas.getContext('2d');
-    canvas.width = 1045
-    canvas.height = 735
+    // canvas.width = 1045
+    // canvas.height = 735
+    canvas.width = {{ .w }}
+    canvas.height = {{ .h }}
 
     // 是否绘制下一帧（控制帧数）
     function nextFrame() {
-        let interval = Math.floor(1000 / 10)
+        let interval = Math.floor(1000 / {{ .fps }})
         dt = new Date();
         let curTime = dt.getMilliseconds()
-        console.log(curTime, lastTime)
-        // if (curTime - lastTime >= interval || lastTime > 1000-interval) {
         if (curTime - lastTime >= interval || curTime - lastTime < -interval) {
             lastTime = curTime
-            console.log("true")
             return true
         } else {
             return false
@@ -36,41 +35,44 @@
 
     var lastTime = 0
 
-    var frames = 0
+    // var frames = 0
 
     // 绘制（主函数）
     function drawFrame() {
         if (nextFrame()) {
-            getReq("http://{{ .ip }}:{{ .port }}/newFrame?frame=" + frames)
-            frames++
-            sleep(100)
-            img = new Image();
-            img.src = "http://{{ .ip }}:{{ .port }}/frames/" + frames + ".png"
-            img.onload = draw;
-
-            function draw() {
-                context.drawImage(img, 0, 0);
-            }
+            frames = getReq("http://{{ .ip }}:{{ .port }}/newFrame/", loadImg)
         }
         requestAnimationFrame(drawFrame);
     }
-
     requestAnimationFrame(drawFrame);
 
-    function getReq(url) {
-        fetch(url).then(
-            function (response) {
-                return response.json();
-            }
-        ).then(
-            function (data) {
-                console.log(data);
-            }
-        ).catch(
-            function (err) {
-                console.log('Fetch Error :-S', err);
-            }
-        );
+    function loadImg(code) {
+        sleep(100)
+        var img = new Image();
+        img.src = "http://{{ .ip }}:{{ .port }}/frames/" + code.code + ".png"
+        img.onload = function () {
+            context.drawImage(img, 0, 0);
+        };
+    }
+
+    function getReq(url, callback) {
+        fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            cache: "no-cache",
+            redirect: 'follow',
+        }).then((response) => response.json())
+            // .then((data) => {
+            //     var resp = data
+            // })
+            .then(callback)
+            .catch(
+                function (err) {
+                    console.log('Fetch Error: ', err);
+                }
+            );
+        // return resp
+
     }
 
     function sleep(ms) {

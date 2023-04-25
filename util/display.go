@@ -8,6 +8,8 @@ import (
 	"image/png"
 )
 
+var W, H int = 480, 640
+
 func AvaiDisplays() []int {
 	var displays []int
 	for i := 0; i < screenshot.NumActiveDisplays(); i++ {
@@ -30,7 +32,7 @@ func Capture(display int) image.Image {
 }
 
 func Img2CompressedPng(img image.Image) []byte {
-	resized := imaging.Resize(img, 1045, 0, imaging.Lanczos)
+	resized := imaging.Resize(img, W, 0, imaging.Lanczos)
 	buffer := new(bytes.Buffer)
 	png.Encode(buffer, resized)
 	return buffer.Bytes()

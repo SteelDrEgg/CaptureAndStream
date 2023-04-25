@@ -6,36 +6,67 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
-func start(port string) {
-	r := gin.Default()
+var frameNum = 0
+var mutex sync.Mutex
+
+func start(port string, quality string) {
+	//Creating new router
+	r := gin.New()
+	gin.SetMode(gin.ReleaseMode)
 	r.LoadHTMLGlob("htmls/*")
 
+	//return web viewer
 	r.GET("/", func(c *gin.Context) {
-		//page, _ := os.ReadFile("index.html")
-		//c.String(http.StatusOK, string(page))
+		var w, h, fps int
+		if quality == "1" {
+			w = 480
+			h = 640
+			fps = 19
+		} else if quality == "2" {
+			w = 720
+			h = 1280
+			fps = 15
+		} else if quality == "3" {
+			w = 1080
+			h = 1920
+			fps = 10
+		} else {
+			w = 480
+			h = 640
+			fps = 10
+		}
+		util.W = w
+		util.H = h
+
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"ip":   util.GetIP(),
 			"port": port,
+			"w":    w,
+			"h":    h,
+			"fps":  fps,
 		})
 	})
 
+	//create new frame
 	r.GET("/newFrame", func(c *gin.Context) {
-		frameCode := c.Query("frame")
 		c.Header("Cache-control", "no-cache")
 		c.Header("Allow-Control-Allow-Origin", "*")
 
+		frameCode := frameNum
+		frameNum++
+
 		capture := util.Capture(0)
 		compressed := util.Img2CompressedPng(capture)
-		//util.Byte2png(compressed, frameCode)
 		util.AddData(compressed)
-		//c.Data(http.StatusOK, "image/png", compressed)
-		c.String(http.StatusOK, string(frameCode))
+		c.JSON(http.StatusOK, gin.H{"code": fmt.Sprintf("%d", frameCode)})
 	})
 
+	//return frame (png)
 	r.GET("/frames/:code", func(c *gin.Context) {
 		c.Header("Cache-control", "no-cache")
 		c.Header("Allow-Control-Allow-Origin", "*")
@@ -46,13 +77,16 @@ func start(port string) {
 		c.Data(http.StatusOK, "image/png", data)
 	})
 
-	r.Run(":" + port) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
-
+	//run server
+	r.Run(":" + port)
 }
 
 func main() {
+	var port, quality string
 	fmt.Print("Enter port: ")
-	var port string
 	fmt.Scan(&port)
-	start(port)
+	fmt.Println("Quality")
+	fmt.Println("1. 480p\t2. 720p\t3. 1080p")
+	fmt.Scan(&quality)
+	start(port, quality)
 }
