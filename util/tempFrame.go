@@ -4,7 +4,7 @@ import (
 	"strconv"
 )
 
-var warehouse = new([30][]byte)
+var warehouse = new([50][]byte)
 var curIndex = 0
 
 func AddData(data []byte) {

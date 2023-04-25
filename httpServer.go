@@ -3,21 +3,24 @@ package main
 
 import (
 	"CaptureAndStream/util"
+	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
+func start(port string) {
 	r := gin.Default()
-
-	//r.Static("/frames", "./temp")
+	r.LoadHTMLGlob("htmls/*")
 
 	r.GET("/", func(c *gin.Context) {
-		page, _ := os.ReadFile("index.html")
-		c.String(http.StatusOK, string(page))
+		//page, _ := os.ReadFile("index.html")
+		//c.String(http.StatusOK, string(page))
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"ip":   util.GetIP(),
+			"port": port,
+		})
 	})
 
 	r.GET("/newFrame", func(c *gin.Context) {
@@ -43,5 +46,13 @@ func main() {
 		c.Data(http.StatusOK, "image/png", data)
 	})
 
-	r.Run(":2222") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run(":" + port) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+
+}
+
+func main() {
+	fmt.Print("Enter port: ")
+	var port string
+	fmt.Scan(&port)
+	start(port)
 }

@@ -41,11 +41,11 @@
     // 绘制（主函数）
     function drawFrame() {
         if (nextFrame()) {
-            getReq("http://127.0.0.1:2222/newFrame?frame=" + frames)
+            getReq("http://{{ .ip }}:{{ .port }}/newFrame?frame=" + frames)
             frames++
             sleep(100)
             img = new Image();
-            img.src = "http://127.0.0.1:2222/frames/" + frames + ".png"
+            img.src = "http://{{ .ip }}:{{ .port }}/frames/" + frames + ".png"
             img.onload = draw;
 
             function draw() {
