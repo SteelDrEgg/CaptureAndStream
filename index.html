@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv='cache-control' content='no-cache'>
+    <meta http-equiv='expires' content='0'>
+    <meta http-equiv='pragma' content='no-cache'>
+</head>
+
+<body>
+<canvas id="mainCanvas"></canvas>
+<script>
+    // 获取canvas
+    const canvas = document.getElementById('mainCanvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const context = canvas.getContext('2d');
+    canvas.width = 1045
+    canvas.height = 735
+
+    // 是否绘制下一帧（控制帧数）
+    function nextFrame() {
+        let interval = Math.floor(1000 / 10)
+        dt = new Date();
+        let curTime = dt.getMilliseconds()
+        console.log(curTime, lastTime)
+        // if (curTime - lastTime >= interval || lastTime > 1000-interval) {
+        if (curTime - lastTime >= interval || curTime - lastTime < -interval) {
+            lastTime = curTime
+            console.log("true")
+            return true
+        } else {
+            return false
+        }
+    }
+
+    var lastTime = 0
+
+    var frames = 0
+
+    // 绘制（主函数）
+    function drawFrame() {
+        if (nextFrame()) {
+            getReq("http://127.0.0.1:2222/newFrame?frame=" + frames)
+            frames++
+            sleep(100)
+            img = new Image();
+            img.src = "http://127.0.0.1:2222/frames/" + frames + ".png"
+            img.onload = draw;
+
+            function draw() {
+                context.drawImage(img, 0, 0);
+            }
+        }
+        requestAnimationFrame(drawFrame);
+    }
+
+    requestAnimationFrame(drawFrame);
+
+    function getReq(url) {
+        fetch(url).then(
+            function (response) {
+                return response.json();
+            }
+        ).then(
+            function (data) {
+                console.log(data);
+            }
+        ).catch(
+            function (err) {
+                console.log('Fetch Error :-S', err);
+            }
+        );
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+
+</script>
+</body>
+
+</html>
