@@ -4,17 +4,15 @@ package main
 import (
 	"CaptureAndStream/util"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
-	"sync"
-
-	"github.com/gin-gonic/gin"
 )
 
 var frameNum = 0
-var mutex sync.Mutex
+var quality int
 
-func start(port string, quality string) {
+func start(port string, resolution string, fps int) {
 	//Creating new router
 	r := gin.New()
 	gin.SetMode(gin.ReleaseMode)
@@ -22,23 +20,19 @@ func start(port string, quality string) {
 
 	//return web viewer
 	r.GET("/", func(c *gin.Context) {
-		var w, h, fps int
-		if quality == "1" {
+		var w, h int
+		if resolution == "1" {
 			w = 480
 			h = 640
-			fps = 19
-		} else if quality == "2" {
+		} else if resolution == "2" {
 			w = 720
 			h = 1280
-			fps = 15
-		} else if quality == "3" {
+		} else if resolution == "3" {
 			w = 1080
 			h = 1920
-			fps = 10
 		} else {
 			w = 480
 			h = 640
-			fps = 10
 		}
 		util.W = w
 		util.H = h
@@ -61,7 +55,7 @@ func start(port string, quality string) {
 		frameNum++
 
 		capture := util.Capture(0)
-		compressed := util.Img2CompressedPng(capture)
+		compressed := util.Img2CompressedPng(capture, quality)
 		util.AddData(compressed)
 		c.JSON(http.StatusOK, gin.H{"code": fmt.Sprintf("%d", frameCode)})
 	})
@@ -82,11 +76,16 @@ func start(port string, quality string) {
 }
 
 func main() {
-	var port, quality string
+	var port, resolution string
+	var fps int
 	fmt.Print("Enter port: ")
 	fmt.Scan(&port)
 	fmt.Println("Quality")
 	fmt.Println("1. 480p\t2. 720p\t3. 1080p")
+	fmt.Scan(&resolution)
+	fmt.Print("Enter quality (lo 0-100 hi): ")
 	fmt.Scan(&quality)
-	start(port, quality)
+	fmt.Print("Enter fps: ")
+	fmt.Scan(&fps)
+	start(port, resolution, fps)
 }

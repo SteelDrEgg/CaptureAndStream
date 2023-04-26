@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/disintegration/imaging v1.6.2
+	github.com/foobaz/lossypng v0.0.0-20200814224715-48fa8819852a
 	github.com/gin-gonic/gin v1.9.0
 	github.com/kbinani/screenshot v0.0.0-20210720154843-7d3a670d8329
 )
