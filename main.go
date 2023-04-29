@@ -83,7 +83,7 @@ func main() {
 	fmt.Println("Quality")
 	fmt.Println("1. 480p\t2. 720p\t3. 1080p")
 	fmt.Scan(&resolution)
-	fmt.Print("Enter quality (lo 0-100 hi): ")
+	fmt.Print("Enter quality (hi 0-100 lo): ")
 	fmt.Scan(&quality)
 	fmt.Print("Enter fps: ")
 	fmt.Scan(&fps)

@@ -5,24 +5,239 @@
     <meta http-equiv='cache-control' content='no-cache'>
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <style>
+        /* icon svgs are from Tabler (tabler-icons.io) */
+        #fullscreen {
+            background: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="white" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path><path d="M4 16v2a2 2 0 0 0 2 2h2"></path><path d="M16 4h2a2 2 0 0 1 2 2v2"></path><path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path></svg>');
+        background-repeat: no-repeat;
+        position: fixed;
+        right: 0;
+        top: 1rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        filter: drop-shadow(0 0 1px #676767);
+        z-index: 1;
+        }
+        #settings {
+            background: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="white" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path> <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"></path><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path></svg>');
+            background-repeat: no-repeat;
+            position: fixed;
+            left: 0;
+            top: 1rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            filter: drop-shadow(0 0 1px #676767);
+            z-index: 1;
+        }
+        #settingModal {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        #settingModal div {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        img {
+            margin: 0;
+            padding: 0;
+            object-fit: fill;
+            background-repeat: no-repeat;
+        }
+    </style>
 </head>
 
 <body>
+<a id="fullscreen" onclick="toggleFullScreen()"></a>
+<a id="settings" onclick="initSettings()"></a>
+<div id="settingModal" style="display: none">
+    <div>
+        <label for="fps">Frame Per Second</label>
+        <input type="number" id="fps" value="0" placeholder="">
+        <br>
+        <input type="checkbox" id="vr">
+        <label for="vr">VR mode</label>
+        <br>
+        <input type="checkbox" id="cinema">
+        <label for="cinema">Match video with ur pupil in VR mode</label>
+        <br>
+        <label for="pd">Relative pupil distance</label>
+        <input type="number" id="pd">
+        <br>
+        <input type="checkbox" id="stretch">
+        <label for="stretch">Stretch to fit window *not working in vr with drawing mode of canvas</label>
+        <br>
+        <label for="drawMode">Drawing mode</label>
+        <select id="drawMode">
+            <option value="canvas">Canvas</option>
+            <option value="img">Image (better fps)</option>
+        </select>
+        <br>
+        <input type="submit" onclick="saveSettings()" value="Save">
+    </div>
+</div>
 <canvas id="mainCanvas"></canvas>
+
+<img id="mainImg" src="">
+<img id="rightImg" src="">
+
 <script>
-    // 获取canvas
+    function toggleModal() {
+        var modal = document.getElementById("settingModal");
+        if (modal.style.display === "none") {
+            modal.style.display = "block";
+        } else {
+            modal.style.display = "none";
+        }
+    }
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement || !document.webkitFullscreenElement || !document.mozFullScreenElement || !document.msFullscreenElement) {
+            document.documentElement.requestFullscreen();
+            document.documentElement.webkitRequestFullscreen();
+            document.documentElement.mozRequestFullScreen();
+            document.documentElement.msRequestFullscreen();
+        } else { // if (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen) {
+            document.exitFullscreen();
+            document.webkitExitFullscreen();
+            document.mozCancelFullScreen();
+            document.msExitFullscreen();
+        }
+    }
+</script>
+
+<script>
+    // 设置
+    var fps = {{ .fps }}
+    var vr = false
+    var drawMode = "canvas"
+    var stretch = false
+    var cinema = false
+    var pd = 3
+
+    // 启动设置框
+    function initSettings() {
+        document.getElementById("fps").value = fps
+        document.getElementById("vr").checked = vr
+        document.getElementById("drawMode").value = drawMode
+        document.getElementById("stretch").checked = stretch
+        document.getElementById("cinema").checked = cinema
+        document.getElementById("pd").value = pd
+        fps = 0
+        toggleModal()
+    }
+
+    // 保存设置
+    function saveSettings() {
+        fps = document.getElementById("fps").value
+        vr = document.getElementById("vr").checked
+        drawMode = document.getElementById("drawMode").value
+        stretch = document.getElementById("stretch").checked
+        cinema = document.getElementById("cinema").checked
+        pd = document.getElementById("pd").value
+        if (vr && drawMode === "img") {
+            imgEle.style.display = "inline"
+            rightImgEle.style.display = "inline"
+            canvas.style.display = "none"
+            initImg()
+        } else if (drawMode === "img") {
+            imgEle.style.display = "inline"
+            rightImgEle.style.display = "none"
+            canvas.style.display = "none"
+            initImg()
+        } else {
+            canvas.style.display = "block"
+            imgEle.style.display = "none"
+            rightImgEle.style.display = "none"
+        }
+        if (vr) {
+            bodyEle.style.background = "black"
+        } else {
+            bodyEle.style.background = "white"
+        }
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        toggleModal()
+    }
+
+    // 调整img模式的画面大小
+    function initImg(){
+        // if(vr && stretch){
+        //     // imgEle.style.width = halfWidth + "px"
+        //     imgEle.style.width = "calc(50% - 3px)"
+        //     imgEle.style.height = window.innerHeight + "px"
+        //     // rightImgEle.style.width = halfWidth + "px"
+        //     rightImgEle.style.width = "calc(50% - 3px)"
+        //     rightImgEle.style.height = window.innerHeight + "px"
+        //     rightImgEle.style.marginLeft = "0"
+        // } else
+        if (stretch) {
+            imgEle.style.height = window.innerHeight + "px"
+        }
+        if (vr) {
+            imgEle.style.height = "auto"
+            rightImgEle.style.height = "auto"
+            if (cinema) {
+                imgEle.style.width = (50 - Math.ceil(pd/2)) + "%"
+                rightImgEle.style.width = (50 - Math.ceil(pd/2)) + "%"
+                rightImgEle.style.marginLeft = "calc(" + pd + "% - 6px)"
+            } else {
+                imgEle.style.width = "calc(50% - 3.5px)"
+                rightImgEle.style.width = "calc(50% - 3.5px)"
+                rightImgEle.style.marginLeft = "0"
+            }
+            if (stretch) {
+                imgEle.style.width = "calc(50% - 3.5px)"
+                rightImgEle.style.width = "calc(50% - 3.5px)"
+                imgEle.style.height = window.innerHeight + "px"
+                rightImgEle.style.height = window.innerHeight + "px"
+            }
+
+            imgEle.style.marginTop = "20%"
+            rightImgEle.style.marginTop = "20%"
+            imgEle.style.marginBottom = "20%"
+            rightImgEle.style.marginBottom = "20%"
+        } else {
+            imgEle.style.width = window.innerWidth + "px"
+        }
+    }
+
+    // 初始化
+    var halfWidth = window.innerWidth / 2
+    var bodyEle = document.getElementsByTagName("body")[0]
+
+
+    // 初始canvas
     const canvas = document.getElementById('mainCanvas');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const context = canvas.getContext('2d');
-    // canvas.width = 1045
-    // canvas.height = 735
-    canvas.width = {{ .w }}
-    canvas.height = {{ .h }}
 
-    // 是否绘制下一帧（控制帧数）
+    // 初始img
+    const imgEle = document.getElementById("mainImg")
+    const rightImgEle = document.getElementById("rightImg")
+
+    if(drawMode === "img"){
+        canvas.style.display = "none"
+    }else{
+        imgEle.style.display = "none"
+        rightImgEle.style.display = "none"
+    }
+
+    // 是否绘制下一帧 (控制帧数)
+    var lastTime = 0
     function nextFrame() {
-        let interval = Math.floor(1000 / {{ .fps }})
+        let interval = Math.floor(1000 / fps)
         dt = new Date();
         let curTime = dt.getMilliseconds()
         if (curTime - lastTime >= interval || curTime - lastTime < -interval) {
@@ -33,48 +248,68 @@
         }
     }
 
-    var lastTime = 0
-
-    // var frames = 0
-
-    // 绘制（主函数）
-    function drawFrame() {
-        if (nextFrame()) {
-            frames = getReq("http://{{ .ip }}:{{ .port }}/newFrame/", loadImg)
-        }
-        requestAnimationFrame(drawFrame);
-    }
-    requestAnimationFrame(drawFrame);
-
-    function loadImg(code) {
+    // 加载帧图片到canvas
+    function drawWithCanvas(code) {
         sleep(100)
         var img = new Image();
         img.src = "http://{{ .ip }}:{{ .port }}/frames/" + code.code + ".png"
         img.onload = function () {
-            context.drawImage(img, 0, 0);
+            if(vr){
+                if (cinema) {
+                    context.drawImage(img, 0, 0, halfWidth - (20 * pd), canvas.height);
+                    context.drawImage(img, halfWidth + (20 * pd), 0, halfWidth - (20 * pd), canvas.height);
+                } else {
+                    context.drawImage(img, 0, 0, halfWidth, canvas.height);
+                    context.drawImage(img, halfWidth, 0, halfWidth, canvas.height);
+                }
+            }else if(stretch){
+                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+            } else {
+                context.drawImage(img, 0, 0);
+            }
         };
     }
+    // 加载帧图片到img
+    function drawWithImg(code) {
+        sleep(10)
+        if(vr){
+            imgEle.src = "http://{{ .ip }}:{{ .port }}/frames/" + code.code + ".png"
+            rightImgEle.src = "http://{{ .ip }}:{{ .port }}/frames/" + code.code + ".png"
+        } else {
+            imgEle.src = "http://{{ .ip }}:{{ .port }}/frames/" + code.code + ".png"
+        }
+    }
 
-    function getReq(url, callback) {
+    // 请求帧图片地址
+    function reqFrame(url, callback) {
         fetch(url, {
             method: 'GET',
             mode: 'cors',
             cache: "no-cache",
             redirect: 'follow',
         }).then((response) => response.json())
-            // .then((data) => {
-            //     var resp = data
-            // })
-            .then(callback)
+            .then(callback) // 将返回的json数据传给callback
             .catch(
                 function (err) {
                     console.log('Fetch Error: ', err);
                 }
             );
-        // return resp
-
     }
 
+    // 绘制（主函数）
+    function drawFrame() {
+        if (nextFrame()) {
+            if(drawMode=="canvas"){
+                reqFrame("http://{{ .ip }}:{{ .port }}/newFrame/", drawWithCanvas)
+            }else{
+                reqFrame("http://{{ .ip }}:{{ .port }}/newFrame/", drawWithImg)
+            }
+        }
+        requestAnimationFrame(drawFrame);
+    }
+    requestAnimationFrame(drawFrame);
+
+    // Sleep函数
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
