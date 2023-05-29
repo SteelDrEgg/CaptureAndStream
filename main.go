@@ -55,7 +55,7 @@ func start(port string, resolution string, fps int) {
 		frameNum++
 
 		capture := util.Capture(0)
-		compressed := util.Img2CompressedPng(capture, quality)
+		compressed := util.Image2Jpeg(capture, quality)
 		util.AddData(compressed)
 		c.JSON(http.StatusOK, gin.H{"code": fmt.Sprintf("%d", frameCode)})
 	})

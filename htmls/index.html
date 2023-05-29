@@ -284,7 +284,7 @@
     function reqFrame(url, callback) {
         fetch(url, {
             method: 'GET',
-            mode: 'cors',
+            mode: 'no-cors',
             cache: "no-cache",
             redirect: 'follow',
         }).then((response) => response.json())

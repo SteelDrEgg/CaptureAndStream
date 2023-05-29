@@ -2,11 +2,10 @@ package util
 
 import (
 	"bytes"
-	"github.com/disintegration/imaging"
-	"github.com/foobaz/lossypng/lossypng"
+	//"github.com/foobaz/lossypng/lossypng"
 	"github.com/kbinani/screenshot"
 	"image"
-	"image/png"
+	"image/jpeg"
 )
 
 var W, H int = 480, 640
@@ -32,14 +31,8 @@ func Capture(display int) image.Image {
 	return img
 }
 
-func Img2CompressedPng(img image.Image, quality int) []byte {
-	resized := imaging.Resize(img, W, 0, imaging.Lanczos)
-	buffer := new(bytes.Buffer)
-	if quality > 0 {
-		compressed := lossypng.Compress(resized, lossypng.RGBAConversion, quality)
-		png.Encode(buffer, compressed)
-	} else {
-		png.Encode(buffer, resized)
-	}
-	return buffer.Bytes()
+func Image2Jpeg(img image.Image, quality int) []byte {
+	buff := bytes.NewBuffer([]byte{})
+	jpeg.Encode(buff, img, &jpeg.Options{Quality: quality})
+	return buff.Bytes()
 }
